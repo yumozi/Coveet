@@ -1,6 +1,8 @@
 import json
 from country_provinces import country_provinces
-
+import nltk
+from nltk.sentiment import SentimentIntensityAnalyzer
+from statistics import mean
 
 class Tweet:
     """A tweet and its related information
@@ -24,7 +26,13 @@ class Tweet:
 
     def tokenize_text(self):
         """Tokenizes the text of the tweet"""
-        raise NotImplementedError
+        self._tokenized_text = nltk.sent_tokenize(self._text)
+
+    def analyze_sentiment(self):
+        """Sets average sentiment of a tweet from its tokenized text"""
+        sia = SentimentIntensityAnalyzer()
+        scores = [sia.polarity_scores(s)["compound"] for s in self._tokenized_text]
+        self._average_sentiment = mean(scores)
 
     def process_location(self) -> bool:
         """Set the user_location attribute to the state/province of the user
