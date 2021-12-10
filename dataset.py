@@ -53,8 +53,6 @@ class Tweet:
 def load_tweets(filename: str) -> list:
     """Loads a list of tweets with valid user location from a json file
     """
-    # load_tweets('hydrated_tweets.json')
-    [tweet.process_location() for tweet in tweets]
     json_tweets = []
     tweets = []
 
