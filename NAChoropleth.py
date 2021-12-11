@@ -16,8 +16,8 @@ class NAChoropleth(QtWidgets.QMainWindow):
     def __init__(self):
         super().__init__()
         # Load data from files
-        self._american_covid_data = pd.read_csv("data/US_Unemployment_Oct2012.csv")
-        self._canadian_covid_data = pd.read_csv("data/canada_test.csv")
+        self._american_covid_data = pd.read_csv("data/canada_empty.csv")
+        self._canadian_covid_data = pd.read_csv("data/us_empty.csv")
 
         # Window initialization
         self.setWindowTitle(self.tr("MAP PROJECT"))
