@@ -5,7 +5,6 @@ import folium
 
 from PyQt5.QtCore import Qt
 from PyQt5 import QtWidgets, QtWebEngineWidgets
-import time
 
 
 class InteractiveMap(QtWidgets.QMainWindow):
