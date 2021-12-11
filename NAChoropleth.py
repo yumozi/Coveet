@@ -16,8 +16,8 @@ class NAChoropleth(QtWidgets.QMainWindow):
     def __init__(self):
         super().__init__()
         # Load data from files
-        self._american_covid_data = pd.read_csv("US_Unemployment_Oct2012.csv")
-        self._canadian_covid_data = pd.read_csv("canada_test.csv")
+        self._american_covid_data = pd.read_csv("data/US_Unemployment_Oct2012.csv")
+        self._canadian_covid_data = pd.read_csv("data/canada_test.csv")
 
         # Window initialization
         self.setWindowTitle(self.tr("MAP PROJECT"))
@@ -68,7 +68,7 @@ class NAChoropleth(QtWidgets.QMainWindow):
 
         # Choropleth configuration
         self._america_choropleth = folium.Choropleth(
-            geo_data="us-states.json",
+            geo_data="data/us-states.json",
             name="America",
             data=self._american_covid_data,
             columns=["State", "Unemployment"],
@@ -82,7 +82,7 @@ class NAChoropleth(QtWidgets.QMainWindow):
         self._america_choropleth.add_to(self._map)
 
         self._canada_choropleth = folium.Choropleth(
-            geo_data="canada_provinces.geojson",
+            geo_data="data/canada_provinces.geojson",
             name="Canada",
             data=self._canadian_covid_data,
             columns=["Province", "Value"],
@@ -103,7 +103,7 @@ class NAChoropleth(QtWidgets.QMainWindow):
         self._view.setHtml(data.getvalue().decode())
 
     def slide_changed(self, value: int) -> None:
-        """Callback to update a lable to show the slider's current value"""
+        """Callback to update a label to show the slider's current value"""
         self._slide_val.setText(str(value))
 
     def combo_changed(self, text: str) -> None:
@@ -112,7 +112,7 @@ class NAChoropleth(QtWidgets.QMainWindow):
         self._slider.setMaximum(self._maxes[text])
         print(text)
         self._canada_choropleth = folium.Choropleth(
-            geo_data="canada_provinces.geojson",
+            geo_data="data/canada_provinces.geojson",
             name="Canada",
             data=self._canadian_covid_data,
             columns=["Province", "Value"],
@@ -128,6 +128,7 @@ class NAChoropleth(QtWidgets.QMainWindow):
         data = io.BytesIO()
         self._map.save(data, close_file=False)
         self._view.setHtml(data.getvalue().decode())
+
 
 if __name__ == "__main__":
     App = QtWidgets.QApplication(sys.argv)
