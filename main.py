@@ -1,37 +1,41 @@
 """
 The main program for the analyzer.
 """
-from dataset import load_tweets
+from tweet import load_tweets
 import argparse
+import pdb
 
 
 # ————————————————————————————————— Argparse —————————————————————————————————
 def parse_args():
     """Parse the command line arguments.
     """
-    parser = argparse.ArgumentParser(description="Interactive menu for ")
-    parser.add_argument("region", type=str, help="Region to analyse")
-    parser.add_argument("-is_comparison", help="Whether or not to run a comparison on the region", action="store_true")
+    parser = argparse.ArgumentParser(description="Argparse for Interactive Map")
+    parser.add_argument("--is_comparison",
+                        dest="is_comparison",
+                        help="Whether or not to run a comparison on the region",
+                        default=False,
+                        type=bool)
     args = parser.parse_args()
 
-    if args.region:
-        # If a region is selected
-        print("Region Selected: {}".format(args.region))
-        if args.is_comparison:
-            # If the comparison flag is raised
-            print("Comparison Selected")
-        else:
-            # Otherwise
-            print("Normal Map")
+    if args.is_comparison:
+        print("Displaying Sentiment vs Covid Cases Map...")
     else:
-        # If no region specified
-        print("No region specified")
+        print("Displaying Sentiment Map...")
+
     return args
 
 
 # ————————————————————————————————— Main —————————————————————————————————
 if __name__ == '__main__':
     args = parse_args()
-    tweets = load_tweets('data/hydrated_tweets.json')
+    prefilter_tweets = load_tweets('data/hydrated_tweets.json')
+    tweets = []
+    for tweet in prefilter_tweets:
+        if tweet.process_location():
+            tweet.tokenize_text()
+            tweet.analyze_sentiment()
+            tweets.append(tweet)
+
 
 
