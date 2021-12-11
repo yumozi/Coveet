@@ -3,7 +3,8 @@ The main program for the analyzer.
 """
 from tweet import load_tweets
 import argparse
-import pdb
+from gui import display_map
+import sys
 
 
 # ————————————————————————————————— Argparse —————————————————————————————————
@@ -11,17 +12,21 @@ def parse_args():
     """Parse the command line arguments.
     """
     parser = argparse.ArgumentParser(description="Argparse for Interactive Map")
-    parser.add_argument("--is_comparison",
-                        dest="is_comparison",
-                        help="Whether or not to run a comparison on the region",
-                        default=False,
-                        type=bool)
+    parser.add_argument("--mode",
+                        dest="mode",
+                        help="The mode of the map: covid/sentiment/comparison",
+                        default='comparison',
+                        type=str)
     args = parser.parse_args()
 
-    if args.is_comparison:
-        print("Displaying Sentiment vs Covid Cases Map...")
+    if args.mode not in {'covid', 'sentiment', 'comparison'}:
+        raise ValueError("Aborting: Invalid Mode.")
+    elif args.mode == 'covid':
+        print("Mode: Covid Map.")
+    elif args.mode == 'sentiment':
+        print("Mode: Sentiment Map.")
     else:
-        print("Displaying Sentiment Map...")
+        print("Mode: Comparison Map.")
 
     return args
 
@@ -29,7 +34,11 @@ def parse_args():
 # ————————————————————————————————— Main —————————————————————————————————
 if __name__ == '__main__':
     args = parse_args()
+
+    print("Loading Tweets...")
     prefilter_tweets = load_tweets('data/hydrated_tweets.json')
+
+    print("Processing Tweets...")
     tweets = []
     for tweet in prefilter_tweets:
         if tweet.process_location():
@@ -37,5 +46,7 @@ if __name__ == '__main__':
             tweet.analyze_sentiment()
             tweets.append(tweet)
 
+    print("Displaying map...")
+    display_map(args.mode)
 
 
