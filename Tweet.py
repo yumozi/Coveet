@@ -12,17 +12,17 @@ class Tweet:
         - text: The text of the tweet
         - tokenized_text: The tokenized text of the tweet
         - user_location: The location of the user who posted the tweet
-        - average_sentiment: The average sentiment of the tweet
+        - score: The sentiment score of the tweet
     """
     _text: str
     _tokenized_text: list
-    _user_location: str
-    _average_sentiment: float
+    _location: str
+    _score: float
 
-    def __init__(self, text, user_location):
+    def __init__(self, text, location):
         self._text = text
         self._tokenized_text = []
-        self._user_location = user_location
+        self._location = location
         self._average_sentiment = 0.0
 
     def tokenize_text(self):
@@ -39,10 +39,10 @@ class Tweet:
         """Set the user_location attribute to the state/province of the user
         Return whether this was successful"""
 
-        tokenized_location = self._user_location.split(' ')
+        tokenized_location = self._location.split(' ')
         for word in tokenized_location:
             if word.lower() in country_provinces['Canada'] or word.lower() in country_provinces['United States']:
-                self._user_location = word.lower()
+                self._location = word.lower()
                 return True
         return False
 

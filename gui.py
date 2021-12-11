@@ -5,19 +5,17 @@ import folium
 
 from PyQt5.QtCore import Qt
 from PyQt5 import QtWidgets, QtWebEngineWidgets
+import time
 
 
-class NAChoropleth(QtWidgets.QMainWindow):
-    """A class meant to aid in the creation and management of an interactive map, with additional
-    choropleth functionality and ability to visualize filtered data.
-
-    TODO: specify instance attributes?
+class InteractiveMap(QtWidgets.QMainWindow):
+    """An interactive choropleth map
     """
     def __init__(self):
         super().__init__()
         # Load data from files
-        self._american_covid_data = pd.read_csv("data/US_Unemployment_Oct2012.csv")
-        self._canadian_covid_data = pd.read_csv("data/canada_test.csv")
+        self._american_covid_data = pd.read_csv("data/us_template.csv")
+        self._canadian_covid_data = pd.read_csv("data/canada_template.csv")
 
         # Window initialization
         self.setWindowTitle(self.tr("MAP PROJECT"))
@@ -41,7 +39,7 @@ class NAChoropleth(QtWidgets.QMainWindow):
             self._combo.addItem(x)
         self._combo.activated[str].connect(self.combo_changed)
 
-        # Slide value display lable
+        # Slide value display label
         self._slide_val = QtWidgets.QLabel('0')
         self._slide_val.setAlignment(Qt.AlignLeft | Qt.AlignVCenter)
 
@@ -68,7 +66,7 @@ class NAChoropleth(QtWidgets.QMainWindow):
 
         # Choropleth configuration
         self._america_choropleth = folium.Choropleth(
-            geo_data="data/us-states.json",
+            geo_data="data/us_states.json",
             name="America",
             data=self._american_covid_data,
             columns=["State", "Unemployment"],
@@ -97,7 +95,6 @@ class NAChoropleth(QtWidgets.QMainWindow):
 
         folium.LayerControl().add_to(self._map)  # add layer control and toggling to the map
 
-        # Connect the map and api
         data = io.BytesIO()
         self._map.save(data, close_file=False)
         self._view.setHtml(data.getvalue().decode())
@@ -108,7 +105,6 @@ class NAChoropleth(QtWidgets.QMainWindow):
 
     def combo_changed(self, text: str) -> None:
         """Callback that updates the map when a new selection is made to the combo box"""
-        # TODO: Find a way to update the map dynamically
         self._slider.setMaximum(self._maxes[text])
         print(text)
         self._canada_choropleth = folium.Choropleth(
@@ -129,11 +125,24 @@ class NAChoropleth(QtWidgets.QMainWindow):
         self._map.save(data, close_file=False)
         self._view.setHtml(data.getvalue().decode())
 
+    def update_map(self) -> None:
+        """Updates the map with the current data"""
+        data = io.BytesIO()
+        self._map.save(data, close_file=False)
+        self._view.setHtml(data.getvalue().decode())
+
+
+def display_map() -> None:
+    """Displays the interactive map"""
+    print("Displaying map")
+    App = QtWidgets.QApplication(sys.argv)
+    window = InteractiveMap()
+    window.show()
+    sys.exit(App.exec_())
+
 
 if __name__ == "__main__":
-    App = QtWidgets.QApplication(sys.argv)
-    window = NAChoropleth()
-    window.show()
+    display_map()
 
     # App = QtWidgets.QApplication(sys.argv)
     # window = QtWidgets.QMainWindow()
@@ -144,4 +153,3 @@ if __name__ == "__main__":
     # hlay.addWidget(NAChoropleth())
     # window.show()
 
-    sys.exit(App.exec())
