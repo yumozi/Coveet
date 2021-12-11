@@ -1,12 +1,1 @@
-
-hydrated_tweets
-hydrated_tweets.csv
-hydrated_tweets_short.json
-hydrated_tweets.json
-data/us-states.json
-data/canada_provinces.geojson
-data/canada_test.csv
-data/US_Unemployment_Oct2012.csv
-data/canada_template.csv
-data/us_states.json
-data/us_template.csv
+data/
