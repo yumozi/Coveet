@@ -3,13 +3,13 @@ import sys
 import pandas as pd
 import folium
 
-import branca.colormap as cmp
+from tweet import create_dataframe, Tweet
 from PyQt5 import QtWidgets, QtWebEngineWidgets
 
 
 class ChoroplethMap(QtWidgets.QMainWindow):
     """A choropleth map"""
-    def __init__(self, mode: str):
+    def __init__(self, mode: str, canada_data: pd.DataFrame, us_data: pd.DataFrame, bins: list):
         super().__init__()
 
         # Window initialization
@@ -32,49 +32,52 @@ class ChoroplethMap(QtWidgets.QMainWindow):
 
         self._map = folium.Map(location=[40, -95], zoom_start=4, tiles="Stamen Terrain")
 
+        # Map initialization
+        self._canada_data = canada_data
+        self._us_data = us_data
+
         if mode == "sentiment":
             name = 'sentiment score'
         else:
-            self._american_data = pd.read_csv("data/us_covid.csv")
-            self._canadian_data = pd.read_csv("data/canada_covid.csv")
             name = 'daily cases'
 
         # Choropleth configuration
-        self._america_choropleth = folium.Choropleth(
-            geo_data="data/us_states.json",
-            name="America",
-            data=self._american_data,
-            columns=["State", "Cases"],
-            key_on="feature.id",
-            fill_color="YlGn",
-            fill_opacity=0.7,
-            line_opacity=.1,
-            legend_name="America",
-            highlight=True,
-            bins=[0, 300, 600, 900, 1200, 1500, 1800, 2100, 2400, 2700]
-        )
-        self._america_choropleth.add_to(self._map)
-
-        # An issue under foilum's GitHub page highlighted that
-        # this is the only way to hide a legend for now
-        for key in self._america_choropleth._children:
-            if key.startswith('color_map'):
-                del(self._america_choropleth._children[key])
-
         self._canada_choropleth = folium.Choropleth(
             geo_data="data/canada_provinces.geojson",
             name="Canada",
-            data=self._canadian_data,
-            columns=["Province", "Cases"],
+            data=self._canada_data,
+            columns=["location", "value"],
             key_on="feature.properties.name",
             fill_color="YlGn",
             fill_opacity=0.7,
             line_opacity=.1,
             legend_name=name,
             highlight=True,
-            bins=[0, 300, 600, 900, 1200, 1500, 1800, 2100, 2400, 2700]
+            bins=bins
         )
         self._canada_choropleth.add_to(self._map)
+
+        self._us_choropleth = folium.Choropleth(
+            geo_data="data/us_states.json",
+            name="America",
+            data=self._us_data,
+            columns=["location", "value"],
+            key_on="feature.id",
+            fill_color="YlGn",
+            fill_opacity=0.7,
+            line_opacity=.1,
+            legend_name="America",
+            highlight=True,
+            bins=bins
+        )
+        self._us_choropleth.add_to(self._map)
+
+        # An issue under foilum's GitHub page highlighted that
+        # this is the only way to display one legend with two
+        # choropleth maps.
+        for key in self._us_choropleth._children:
+            if key.startswith('color_map'):
+                del(self._us_choropleth._children[key])
 
         folium.LayerControl().add_to(self._map)  # add layer control and toggling to the map
 
@@ -83,13 +86,20 @@ class ChoroplethMap(QtWidgets.QMainWindow):
         self._view.setHtml(data.getvalue().decode())
 
 
-def display_map(mode: str) -> None:
+def display_map(mode: str, tweets: list[Tweet]) -> None:
     """Displays the interactive map"""
 
     app = QtWidgets.QApplication(sys.argv)
 
-    if mode == "sentiment" or mode == "covid":
-        window = ChoroplethMap(mode)
+    if mode == "sentiment":
+        canada_data, us_data = create_dataframe(tweets)
+        window = ChoroplethMap(mode, canada_data, us_data, bins=[-1, -0.5, 0, 0.5, 1])
+        window.show()
+    elif mode == 'covid':
+        window = ChoroplethMap(mode,
+                               canada_data=pd.read_csv("data/canada_covid.csv"),
+                               us_data=pd.read_csv("data/us_covid.csv"),
+                               bins=[0, 300, 600, 900, 1200, 1500, 1800, 2100, 2400, 2700])
         window.show()
     else:
         window = QtWidgets.QMainWindow()
@@ -101,7 +111,3 @@ def display_map(mode: str) -> None:
         window.show()
 
     sys.exit(app.exec_())
-
-
-if __name__ == "__main__":
-    display_map('covid')

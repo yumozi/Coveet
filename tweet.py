@@ -3,7 +3,7 @@ from country_provinces import country_provinces
 import nltk
 from nltk.sentiment import SentimentIntensityAnalyzer
 from statistics import mean
-
+import pandas as pd
 
 class Tweet:
     """A tweet and its related information
@@ -17,13 +17,15 @@ class Tweet:
     _text: str
     _tokenized_text: list
     _location: str
+    _country: str
     _score: float
 
     def __init__(self, text, location):
         self._text = text
         self._tokenized_text = []
         self._location = location
-        self._average_sentiment = 0.0
+        self._country = ''
+        self._score = 0.0
 
     def tokenize_text(self):
         """Tokenizes the text of the tweet"""
@@ -33,7 +35,7 @@ class Tweet:
         """Sets average sentiment of a tweet from its tokenized text"""
         sia = SentimentIntensityAnalyzer()
         scores = [sia.polarity_scores(s)["compound"] for s in self._tokenized_text]
-        self._average_sentiment = mean(scores)
+        self._score = mean(scores)
 
     def process_location(self) -> bool:
         """Set the user_location attribute to the state/province of the user
@@ -43,8 +45,21 @@ class Tweet:
         for word in tokenized_location:
             if word.lower() in country_provinces['Canada'] or word.lower() in country_provinces['United States']:
                 self._location = word.lower()
+                self._country = 'Canada' if word.lower() in country_provinces['Canada'] else 'United States'
                 return True
         return False
+
+    def get_location(self):
+        """Returns the location of the tweet"""
+        return self._location
+
+    def get_score(self):
+        """Returns the sentiment score of the tweet"""
+        return self._score
+
+    def get_country(self):
+        """Returns the country of the tweet"""
+        return self._country
 
     def __str__(self):
         """Returns the first 100 characters of the tweet"""
@@ -69,6 +84,36 @@ def load_tweets(filename: str) -> list:
     return tweets
 
 
+def create_dataframe(tweets: list) -> tuple[pd.DataFrame, pd.DataFrame]:
+    """Creates a pandas dataframe from a list of tweets with columns: location, sentiment score
+    """
+    canada_scores = {}
+    us_scores = {}
+    for tweet in tweets:
+        location = tweet.get_location()
+        if tweet.get_country() == 'Canada':
+            if location not in canada_scores:
+                canada_scores[location] = []
+            canada_scores[location].append(tweet.get_score())
+        else:
+            if location not in us_scores:
+                us_scores[location] = []
+            us_scores[location].append(tweet.get_score())
 
+    for location in canada_scores:
+        canada_scores[location] = sum(canada_scores[location]) / len(canada_scores[location])
+    for location in us_scores:
+        us_scores[location] = sum(us_scores[location]) / len(us_scores[location])
+
+    canada_dataframe = {'location': [], 'value': []}
+    us_dataframe = {'location': [], 'value': []}
+    for location in canada_scores:
+        canada_dataframe['location'].append(location.title())
+        canada_dataframe['value'].append(canada_scores[location])
+    for location in us_scores:
+        us_dataframe['location'].append(location.title())
+        us_dataframe['value'].append(us_scores[location])
+
+    return pd.DataFrame.from_dict(canada_dataframe), pd.DataFrame.from_dict(us_dataframe)
 
 

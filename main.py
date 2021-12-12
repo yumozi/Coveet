@@ -4,7 +4,6 @@ The main program for the analyzer.
 from tweet import load_tweets
 import argparse
 from gui import display_map
-import sys
 
 
 # ————————————————————————————————— Argparse —————————————————————————————————
@@ -47,6 +46,4 @@ if __name__ == '__main__':
             tweets.append(tweet)
 
     print("Displaying map...")
-    display_map(args.mode)
-
-
+    display_map(args.mode, tweets)
