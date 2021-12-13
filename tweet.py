@@ -5,6 +5,7 @@ from nltk.sentiment import SentimentIntensityAnalyzer
 from statistics import mean
 import pandas as pd
 
+
 class Tweet:
     """A tweet and its related information
 
