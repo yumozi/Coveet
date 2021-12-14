@@ -12,12 +12,6 @@ from tweet import get_tweets
 
 from country_provinces import all_provinces
 
-
-from covid_data import CovidData
-from tweet import get_tweets
-
-from country_provinces import all_provinces
-
 from typing import Optional
 
 
