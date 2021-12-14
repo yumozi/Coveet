@@ -7,7 +7,6 @@ This file is Copyright (c) 2021 Eric Xue and Jeremy Xie.
 import datetime
 import pandas as pd
 
-
 class CovidData:
     """
     Class to process covid data
@@ -16,8 +15,8 @@ class CovidData:
         - ca_data: a DataFrame containing the covid data for Canada
         - us_data: a DataFrame containing the covid data for the US
     """
-    ca_data = pd.DataFrame
-    us_data = pd.DataFrame
+    ca_data: pd.DataFrame
+    us_data: pd.DataFrame
 
     def __init__(self) -> None:
         """Initializes a new CovidData object"""
@@ -40,7 +39,8 @@ class CovidData:
                                           'PRINCE EDWARD ISLAND': 'Prince Edward Island',
                                           'NEWFOUNDLAND AND LABRADOR': 'Newfoundland and Labrador',
                                           'BRITISH COLUMBIA': 'British Columbia',
-                                          'NORTHWEST TERRITORIES': 'Northwest Territories'}, inplace=True)
+                                          'NORTHWEST TERRITORIES': 'Northwest Territories'},
+                                         inplace=True)
 
         # Remove any rows with 'REPATRIATED' in the Province column
         indices = self.ca_data[self.ca_data['Province'] == 'REPATRIATED'].index
@@ -72,12 +72,13 @@ class CovidData:
         date_str = date.strftime('%Y-%m-%d')
 
         # Fetch for cases in Canada on the given date
-        ca_rtn = self.ca_data.loc[self.ca_data['SummaryDate'] == date_str.replace('-', '/') + ' 12:00:00+00']\
+        ca_rtn = self.ca_data.loc[self.ca_data['SummaryDate']
+                                  == date_str.replace('-', '/') + ' 12:00:00+00']\
             .drop('SummaryDate', axis=1).reset_index(drop=True)
 
         # Fetch for cases in US on the given date
-        us_rtn = self.us_data.loc[self.us_data['Submission Date'] == date_str].drop('Submission Date', axis=1)\
-            .reset_index(drop=True)
+        us_rtn = self.us_data.loc[self.us_data['Submission Date'] == date_str].\
+            drop('Submission Date', axis=1).reset_index(drop=True)
 
         # Calculate bin boundaries for the given date
         max_cases = max(ca_rtn['DailyTotals'].max(), us_rtn['7-day Avg Cases'].max())
@@ -87,5 +88,21 @@ class CovidData:
         return ca_rtn, us_rtn, bins
 
 
-if __name__ == "__main__":
-    pass
+if __name__ == '__main__':
+    import python_ta.contracts
+
+    python_ta.contracts.DEBUG_CONTRACTS = False
+    python_ta.contracts.check_all_contracts()
+
+    import doctest
+
+    doctest.testmod(verbose=True)
+
+    import python_ta
+
+    python_ta.check_all(config={
+        'extra-imports': ['datetime', 'pandas'],
+        'allowed-io': ['run_example'],
+        'max-line-length': 100,
+        'disable': ['R1705', 'C0200', 'R0201']
+    })

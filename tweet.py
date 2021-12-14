@@ -5,12 +5,14 @@ Copyright and Usage Information
 This file is Copyright (c) 2021 Eric Xue and Jeremy Xie.
 """
 import json
-from country_provinces import country_provinces
+import datetime
+from statistics import mean
+
 import nltk
 from nltk.sentiment import SentimentIntensityAnalyzer
-from statistics import mean
 import pandas as pd
-import datetime
+
+from country_provinces import country_provinces
 
 
 class Tweet:
@@ -29,7 +31,7 @@ class Tweet:
     _country: str
     _score: float
 
-    def __init__(self, text, location) -> None:
+    def __init__(self, text: str, location: str) -> None:
         self._text = text
         self._tokenized_text = []
         self._location = location
@@ -54,9 +56,11 @@ class Tweet:
 
         tokenized_location = self._location.split(' ')
         for word in tokenized_location:
-            if word.lower() in country_provinces['Canada'] or word.lower() in country_provinces['United States']:
+            if word.lower() in country_provinces['Canada'] or \
+                    word.lower() in country_provinces['United States']:
                 self._location = word.lower()
-                self._country = 'Canada' if word.lower() in country_provinces['Canada'] else 'United States'
+                self._country = 'Canada' if word.lower() in country_provinces['Canada'] \
+                    else 'United States'
                 return True
         return False
 
@@ -79,8 +83,9 @@ class Tweet:
 
 def get_tweets(date: datetime.datetime) -> tuple[pd.DataFrame, pd.DataFrame]:
     """
-    Returns the average tweet sentiment for every region and the maximum for all the regions, given a date
-    The resulting tuple holds the american data at index 0 and the canadian data at index 1.
+    Returns the average tweet sentiment for every region and the maximum for all the regions
+    given a date. The resulting tuple holds the american data at index 0 and the canadian data
+    at index 1.
 
     Preconditions:
       - date in self.possible_dates
@@ -146,3 +151,23 @@ def create_dataframe(tweets: list) -> tuple[pd.DataFrame, pd.DataFrame]:
         us_dataframe['value'].append(us_scores[location])
 
     return pd.DataFrame.from_dict(canada_dataframe), pd.DataFrame.from_dict(us_dataframe)
+
+
+if __name__ == '__main__':
+    import python_ta.contracts
+
+    python_ta.contracts.DEBUG_CONTRACTS = False
+    python_ta.contracts.check_all_contracts()
+
+    import doctest
+
+    doctest.testmod(verbose=True)
+
+    import python_ta
+
+    python_ta.check_all(config={
+        'extra-imports': ['nltk', 'nltk.sentiment', 'country_provinces', 'statistics'],
+        'allowed-io': ['open'],
+        'max-line-length': 100,
+        'disable': ['R1705', 'C0200', 'R0201']
+    })

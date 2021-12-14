@@ -7,18 +7,15 @@ This file is Copyright (c) 2021 Eric Xue and Jeremy Xie.
 import datetime
 import io
 import sys
+from typing import Optional
+
 import folium
 import pandas as pd
-
-from PyQt5.QtCore import *
 from PyQt5 import QtWidgets, QtWebEngineWidgets
 
 from covid_data import CovidData
 from tweet import get_tweets
-
 from country_provinces import all_provinces
-
-from typing import Optional
 
 
 class ChoroplethMap(QtWidgets.QMainWindow):
@@ -43,9 +40,9 @@ class ChoroplethMap(QtWidgets.QMainWindow):
     _america_choropleth: Optional[folium.Choropleth] = None
     _canada_choropleth: Optional[folium.Choropleth] = None
 
-    def __init__(self, mode: str):
+    def __init__(self, mode: str) -> None:
         """Initializes a ChoroplethMap object.
-        
+
         Preconditions:
           - mode in {'covid','sentiment'}
         """
@@ -77,7 +74,8 @@ class ChoroplethMap(QtWidgets.QMainWindow):
             self._legend_name = 'daily cases'
         else:
             # mode == 'sentiment'
-            self._ca_data, self._us_data = get_tweets(self.parse_date_str(self._selectable_dates[0]))
+            self._ca_data, self._us_data \
+                = get_tweets(self.parse_date_str(self._selectable_dates[0]))
             self._bins = [-1, -0.75, -0.5, -0.25, 0, 0.25, 0.5, 0.75, 1]
             self._legend_name = 'sentiment score'
 
@@ -103,7 +101,6 @@ class ChoroplethMap(QtWidgets.QMainWindow):
         v_layout.addWidget(self._date_selector)
         v_layout.addWidget(self._region_selector)
         v_layout.addWidget(self._value_display)
-        v_layout.setAlignment(Qt.AlignTop)
         h_layout.addWidget(adjust_frame)
         h_layout.addWidget(self._view, stretch=1)
 
@@ -112,7 +109,7 @@ class ChoroplethMap(QtWidgets.QMainWindow):
 
     def render_map(self) -> None:
         """Renders a map with current data"""
-        self._map = folium.Map(location=[40, -95], zoom_start=4, tiles="Stamen Terrain")
+        self._map = folium.Map(location=[40, -95], zoom_start=3, tiles="Stamen Terrain")
 
         # Choropleth configuration
         if self._mode == 'covid':
@@ -156,7 +153,7 @@ class ChoroplethMap(QtWidgets.QMainWindow):
         # this is the only way to hide a legend for now
         for key in self._america_choropleth._children:
             if key.startswith('color_map'):
-                del (self._america_choropleth._children[key])
+                del self._america_choropleth._children[key]
 
         self._canada_choropleth.geojson.add_child(
             folium.features.GeoJsonTooltip(['name'], labels=False)
@@ -226,7 +223,7 @@ def display_map(mode: str) -> None:
 
     app = QtWidgets.QApplication(sys.argv)
 
-    if mode == "sentiment" or mode == "covid":
+    if mode in {'covid', 'sentiment'}:
         window = ChoroplethMap(mode)
         window.show()
     else:
@@ -241,19 +238,21 @@ def display_map(mode: str) -> None:
     sys.exit(app.exec_())
 
 
-if __name__ == "__main__":
-    display_map('')
+if __name__ == '__main__':
+    import python_ta.contracts
 
-    # import python_ta
-    # import python_ta.contracts
-    # python_ta.contracts.DEBUG_CONTRACTS = True
-    # python_ta.contracts.check_all_contracts()
-    # import doctest
-    # doctest.testmod(verbose=True)
-    # python_ta.check_all(config={
-    #     # the names (strs) of imported modules
-    #     'extra-imports': ['python_ta.contracts', 'datetime', 'io', 'sys', 'folium', 'covid_processor'],
-    #     'allowed-io': [],  # the names (strs) of functions that call print/open/input
-    #     'max-line-length': 100,
-    #     'disable': ['R1705', 'C0200']
-    # })
+    python_ta.contracts.DEBUG_CONTRACTS = False
+    python_ta.contracts.check_all_contracts()
+
+    import doctest
+
+    doctest.testmod(verbose=True)
+
+    import python_ta
+
+    python_ta.check_all(config={
+        'extra-imports': ['os', 'sys', 'typing', 'datetime', 'io', 'json', 'folium', 'pandas'],
+        'allowed-io': ['run_example'],
+        'max-line-length': 100,
+        'disable': ['R1705', 'C0200', 'R0201']
+    })

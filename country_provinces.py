@@ -12,14 +12,14 @@ country_provinces = {'Canada': ['alberta', 'british columbia', 'manitoba',
                      'United States': ['alabama', 'alaska', 'arizona', 'arkansas', 'california',
                                        'colorado', 'connecticut', 'delaware', 'florida', 'georgia',
                                        'hawaii', 'idaho', 'illinois', 'indiana', 'iowa', 'kansas',
-                                       'kentucky', 'louisiana', 'maine', 'maryland', 'massachusetts',
-                                       'michigan', 'minnesota', 'mississippi', 'missouri', 'montana',
-                                       'nebraska', 'nevada', 'new hampshire', 'new jersey',
-                                       'new mexico', 'new york', 'north carolina', 'north dakota',
-                                       'ohio', 'oklahoma', 'oregon', 'pennsylvania', 'rhode island',
-                                       'south carolina', 'south dakota', 'tennessee', 'texas',
-                                       'utah', 'vermont', 'virginia', 'washington', 'west virginia',
-                                       'wisconsin', 'wyoming']}
+                                       'kentucky', 'louisiana', 'maine', 'maryland',
+                                       'massachusetts', 'michigan', 'minnesota', 'mississippi',
+                                       'missouri', 'montana', 'nebraska', 'nevada', 'new hampshire',
+                                       'new jersey', 'new mexico', 'new york', 'north carolina',
+                                       'north dakota', 'ohio', 'oklahoma', 'oregon', 'pennsylvania',
+                                       'rhode island', 'south carolina', 'south dakota',
+                                       'tennessee', 'texas', 'utah', 'vermont', 'virginia',
+                                       'washington', 'west virginia', 'wisconsin', 'wyoming']}
 
 all_provinces = ['Alberta', 'British Columbia', 'Manitoba', 'New Brunswick',
                  'Newfoundland and Labrador', 'Northwest Territories', 'Nova Scotia',
@@ -33,3 +33,20 @@ all_provinces = ['Alberta', 'British Columbia', 'Manitoba', 'New Brunswick',
                  'Oregon', 'Pennsylvania', 'Rhode Island', 'South Carolina', 'South Dakota',
                  'Tennessee', 'Texas', 'Utah', 'Vermont', 'Virginia', 'Washington', 'West Virginia',
                  'Wisconsin', 'Wyoming']
+
+if __name__ == '__main__':
+    import python_ta.contracts
+
+    python_ta.contracts.DEBUG_CONTRACTS = False
+    python_ta.contracts.check_all_contracts()
+
+    import doctest
+
+    doctest.testmod(verbose=True)
+
+    import python_ta
+    python_ta.check_all(config={
+        'allowed-io': ['run_example'],
+        'max-line-length': 100,
+        'disable': ['R1705', 'C0200', 'R0201']
+    })
