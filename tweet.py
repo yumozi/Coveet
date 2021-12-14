@@ -6,6 +6,7 @@ from statistics import mean
 import pandas as pd
 import datetime
 
+
 class Tweet:
     """A tweet and its related information
 
@@ -27,12 +28,14 @@ class Tweet:
         self._location = location
         self._country = ''
         self._score = 0.0
+        self.tokenize_text()
+        self.analyze_sentiment()
 
-    def tokenize_text(self):
+    def tokenize_text(self) -> None:
         """Tokenizes the text of the tweet"""
         self._tokenized_text = nltk.sent_tokenize(self._text)
 
-    def analyze_sentiment(self):
+    def analyze_sentiment(self) -> None:
         """Sets average sentiment of a tweet from its tokenized text"""
         sia = SentimentIntensityAnalyzer()
         scores = [sia.polarity_scores(s)["compound"] for s in self._tokenized_text]
@@ -50,19 +53,19 @@ class Tweet:
                 return True
         return False
 
-    def get_location(self):
+    def get_location(self) -> str:
         """Returns the location of the tweet"""
         return self._location
 
-    def get_score(self):
+    def get_score(self) -> float:
         """Returns the sentiment score of the tweet"""
         return self._score
 
-    def get_country(self):
+    def get_country(self) -> str:
         """Returns the country of the tweet"""
         return self._country
 
-    def __str__(self):
+    def __str__(self) -> str:
         """Returns the first 100 characters of the tweet"""
         return self._text[:100] + '...'
 
@@ -81,8 +84,6 @@ def get_tweets(date: datetime.datetime) -> tuple[pd.DataFrame, pd.DataFrame]:
     tweets = []
     for tweet in prefilter_tweets:
         if tweet.process_location():
-            tweet.tokenize_text()
-            tweet.analyze_sentiment()
             tweets.append(tweet)
     ca_data, us_data = create_dataframe(tweets)
 
