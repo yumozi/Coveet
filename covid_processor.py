@@ -1,90 +1,80 @@
+"""CovidData"""
 import datetime
-import pandas
-
-import country_provinces
 import pandas as pd
 
 
-class CovidProcessor():
+class CovidData:
     """
-    A class used to handle manipulating American and Canadian COVID records
+    Class to process covid data
     """
+    ca_data = pd.DataFrame
+    us_data = pd.DataFrame
 
-    def __init__(self):
+    def __init__(self) -> None:
+        # Load Canada covid data
         self.ca_data = pd.read_csv("data/Provincial_Daily_Totals.csv")
 
-        # Cleaning up and removing unnecessary info:
-        self.ca_data["Province"].replace({'ALBERTA': 'Alberta', 'NWT': 'Northwest Territories', 'YUKON': 'Yukon',
-                                          'SASKATCHEWAN': 'Saskatchewan', 'PEI': 'Prince Edward Island',
-                                          'ONTARIO': 'Ontario', 'NEW BRUNSWICK': 'New Brunswick',
-                                          'NOVA SCOTIA': 'Nova Scotia', 'NL': 'Newfoundland and Labrador',
-                                          'MANITOBA': 'Manitoba', 'BC': 'British Columbia',
-                                          'NUNAVUT': 'Nunavut', 'QUEBEC': 'Quebec'}, inplace=True)
+        # Dataframe representing daily cases for provinces in Canada
+        self.ca_data = self.ca_data[['Province', 'SummaryDate', 'DailyTotals']]
 
-        self.ca_data["Province"].replace({'PRINCE EDWARD ISLAND': 'Prince Edward Island',
+        # Reformat names in the 'Province' column
+        self.ca_data["Province"].replace({'ALBERTA': 'Alberta', 'NWT': 'Northwest Territories',
+                                          'YUKON': 'Yukon', 'SASKATCHEWAN': 'Saskatchewan',
+                                          'PEI': 'Prince Edward Island', 'ONTARIO': 'Ontario',
+                                          'NEW BRUNSWICK': 'New Brunswick',
+                                          'NOVA SCOTIA': 'Nova Scotia',
+                                          'NL': 'Newfoundland and Labrador',
+                                          'MANITOBA': 'Manitoba', 'BC': 'British Columbia',
+                                          'NUNAVUT': 'Nunavut', 'QUEBEC': 'Quebec',
+                                          'PRINCE EDWARD ISLAND': 'Prince Edward Island',
                                           'NEWFOUNDLAND AND LABRADOR': 'Newfoundland and Labrador',
                                           'BRITISH COLUMBIA': 'British Columbia',
                                           'NORTHWEST TERRITORIES': 'Northwest Territories'}, inplace=True)
 
-        # Remove canada total and repatriated canada (not provinces)
-        for x in ['CANADA', 'REPATRIATED']:
-            indexes = self.ca_data[self.ca_data['Province'] == x].index
-            self.ca_data.drop(indexes, inplace=True)
+        # Remove any rows with 'REPATRIATED' in the Province column
+        indices = self.ca_data[self.ca_data['Province'] == 'REPATRIATED'].index
+        self.ca_data.drop(indices, inplace=True)
 
-        # Negative covid_data is inadmissable for our uses
-        num = self.ca_data._get_numeric_data()
-        num[num < 0] = 0
+        # Replace any DailyTotals that is less than 0 with 0
+        indices = self.ca_data[self.ca_data['DailyTotals'] < 0].index
+        self.ca_data.loc[indices, 'DailyTotals'] = 0
 
-        # Continuing on to US covid_data
+        # Load US covid data
         self.us_data = pd.read_csv("data/State_Daily_Totals.csv")
 
-        # Negative covid_data is inadmissable for our uses
-        num = self.us_data._get_numeric_data()
-        num[num < 0] = 0
+        # Dataframe representing daily cases for states in US
+        self.us_data = self.us_data[['State Name', 'Submission Date', '7-day Avg Cases']]
 
-        # Restrictive ranges
-        self.ca_range = [datetime.datetime(2020, 1, 25), datetime.datetime(2021, 12, 11)]
-        self.us_range = [datetime.datetime(2020, 1, 22), datetime.datetime(2021, 12, 10)]
+        # Replace any 7-day Avg Cases that is less than 0 with 0
+        indices = self.us_data[self.us_data['7-day Avg Cases'] < 0].index
+        self.us_data.loc[indices, '7-day Avg Cases'] = 0
 
-        # Relevant columns for us to use
-        self.ca_cases = self.ca_data[['Province', 'SummaryDate', 'DailyTotals']]
-        self.us_cases = self.us_data[['State Name', 'Submission Date', '7-day Avg Cases']]
-
-    def get_data(self, date: datetime.datetime) -> tuple[pd.DataFrame, pd.DataFrame, list[float], list[str]]:
+    def get_data(self, date: datetime.datetime) -> tuple[pd.DataFrame, pd.DataFrame, list[float]]:
         """
-        Returns the dataset's daily cases for every region and the maximum for all the regions, given a date
-        The resulting tuple holds the american data at index 0 and the canadian data at index 1.
+        Returns daily cases for every province in Canada, daily cases for every state in US, and
+        the bin boundaries for the daily cases across Canada and US.
 
         Preconditions:
-          - self.ca_range[0] <= date <= self.ca_range[1]
-          - self.us_range[0] <= date <= self.us_range[1]
+          - datetime.datetime(2020, 1, 22) <= date <= datetime.datetime(2021, 12, 11)
         """
-        date_str = date.strftime('%Y-%m-%d')  # Convert our datetime into (year month day) format
+        # Convert input date into "year-month-day" format
+        date_str = date.strftime('%Y-%m-%d')
 
-        # Dataframe representing daily cases for provinces in Canada, during the date
-        ca_rtn = self.ca_cases.loc[self.ca_cases['SummaryDate'] == date_str.replace('-', '/') + ' 12:00:00+00']\
+        # Fetch for cases in Canada on the given date
+        ca_rtn = self.ca_data.loc[self.ca_data['SummaryDate'] == date_str.replace('-', '/') + ' 12:00:00+00']\
             .drop('SummaryDate', axis=1).reset_index(drop=True)
 
-        # Dataframe representing daily cases for provinces in America, during the date
-        us_rtn = self.us_cases.loc[self.us_cases['Submission Date'] == date_str].drop('Submission Date', axis=1)\
+        # Fetch for cases in US on the given date
+        us_rtn = self.us_data.loc[self.us_data['Submission Date'] == date_str].drop('Submission Date', axis=1)\
             .reset_index(drop=True)
 
-        # Choropleth value scale
-        region_rtn = ca_rtn['Province'].tolist() + us_rtn['State Name'].tolist()
+        # Calculate bin boundaries for the given date
+        max_cases = max(ca_rtn['DailyTotals'].max(), us_rtn['7-day Avg Cases'].max())
+        step = max_cases / 9
+        bins = [x * step for x in range(10)]
 
-        # Maximum of all daily cases
-        max_count = max(ca_rtn['DailyTotals'].max(), us_rtn['7-day Avg Cases'].max())
-        step = max_count / 9
-
-        # Choropleth value scale
-        bins_rtn = [x * step for x in range(10)]
-
-        return (ca_rtn, us_rtn, bins_rtn, region_rtn)
+        return ca_rtn, us_rtn, bins
 
 
 if __name__ == "__main__":
-    # Test Code
-    a = CovidProcessor()
-    data = a.get_data(datetime.datetime(2020, 12, 4))
-    print(data[0].shape, data[1].shape, data[2], data[3])
-    #print(covid_data[1])
+    pass

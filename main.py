@@ -1,13 +1,12 @@
 """
 The main program for the analyzer.
 """
-from tweet import load_tweets
 import argparse
 from gui import display_map
 
 
 # ————————————————————————————————— Argparse —————————————————————————————————
-def parse_args():
+def parse_args() -> argparse.Namespace:
     """Parse the command line arguments.
     """
     parser = argparse.ArgumentParser(description="Argparse for Interactive Map")
