@@ -1,3 +1,9 @@
+"""Coveet: Twitter COVID Sentiment Analyser
+
+Copyright and Usage Information
+===============================
+This file is Copyright (c) 2021 Eric Xue and Jeremy Liu.
+"""
 import datetime
 import io
 import sys

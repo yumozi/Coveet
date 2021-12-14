@@ -1,5 +1,8 @@
-"""
-The main program for the analyzer.
+"""Coveet: Twitter COVID Sentiment Analyser
+
+Copyright and Usage Information
+===============================
+This file is Copyright (c) 2021 Eric Xue and Jeremy Liu.
 """
 import argparse
 from gui import display_map
