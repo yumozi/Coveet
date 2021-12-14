@@ -1,13 +1,13 @@
-"""CovidData"""
-import datetime
-import pandas as pd
-
 """Coveet: Twitter COVID Sentiment Analyser
 
 Copyright and Usage Information
 ===============================
 This file is Copyright (c) 2021 Eric Xue and Jeremy Xie.
 """
+import datetime
+import pandas as pd
+
+
 class CovidData:
     """
     Class to process covid data
