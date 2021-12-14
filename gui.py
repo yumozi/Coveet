@@ -50,6 +50,7 @@ class ChoroplethMap(QtWidgets.QMainWindow):
             self._legend_name = 'sentiment score'
 
         # More Data Elements
+        # Comboboxes 1 and 2
         self._combo = QtWidgets.QComboBox()
         self._combo.addItems(self._selectable_dates)
         self._combo.activated[str].connect(self.combo_changed)
@@ -60,6 +61,7 @@ class ChoroplethMap(QtWidgets.QMainWindow):
 
         self._property_label = QtWidgets.QLabel()
 
+        # Property lable creation based on mode
         if mode == 'covid':
             self._property_label.setText('New COVID Cases: NAN')
         else:
@@ -76,9 +78,12 @@ class ChoroplethMap(QtWidgets.QMainWindow):
         h_layout.addWidget(adjust_frame)
         h_layout.addWidget(self._view, stretch=1)
 
+        # Done to avoid "initialized outside of init"
         self._map = None
         self._america_choropleth = None
         self._canada_choropleth = None
+
+        # Draw the map in the window
         self.render_map()
 
     def combo_changed(self, text: str) -> None:
@@ -113,10 +118,10 @@ class ChoroplethMap(QtWidgets.QMainWindow):
                 sentiment = self._canadian_data.loc[self._canadian_data['location'] == text].values[0][1]
             elif text in self._american_data['location'].values:
                 sentiment = self._american_data.loc[self._american_data['location'] == text].values[0][1]
-            self._property_label.setText(" Avg. TWITTER Sentiment: " + str(sentiment))
+            self._property_label.setText(" Avg. TWITTER Sentiment: " + str(round(sentiment,5)))
 
     def render_map(self) -> None:
-        """Updates the map with the current data"""
+        """Redraws the map with updated data"""
         self._map = folium.Map(location=[40, -95], zoom_start=4, tiles="Stamen Terrain")
 
         # Choropleth configuration
@@ -203,7 +208,8 @@ def display_map(mode: str) -> None:
 
 
 if __name__ == "__main__":
-    #display_map('covid')
+    # display_map('covid')
+    # display_map('sentiment')
     display_map('')
 
     # import python_ta

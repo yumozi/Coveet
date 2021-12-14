@@ -7,7 +7,7 @@ import pandas as pd
 
 class CovidProcessor():
     """
-    A class used to handle manipulating American and Canadian COVID records and deriving covid_data
+    A class used to handle manipulating American and Canadian COVID records
     """
 
     def __init__(self):
@@ -53,7 +53,7 @@ class CovidProcessor():
     def get_data(self, date: datetime.datetime) -> tuple[pd.DataFrame, pd.DataFrame, list[float], list[str]]:
         """
         Returns the dataset's daily cases for every region and the maximum for all the regions, given a date
-        The resulting tuple holds the american covid_data at index 0 and the canadian covid_data at index 1.
+        The resulting tuple holds the american data at index 0 and the canadian data at index 1.
 
         Preconditions:
           - self.ca_range[0] <= date <= self.ca_range[1]
@@ -69,17 +69,21 @@ class CovidProcessor():
         us_rtn = self.us_cases.loc[self.us_cases['Submission Date'] == date_str].drop('Submission Date', axis=1)\
             .reset_index(drop=True)
 
+        # Choropleth value scale
+        region_rtn = ca_rtn['Province'].tolist() + us_rtn['State Name'].tolist()
+
         # Maximum of all daily cases
         max_count = max(ca_rtn['DailyTotals'].max(), us_rtn['7-day Avg Cases'].max())
         step = max_count / 9
-        bins_rtn = [x * step for x in range(10)]
 
-        region_rtn = ca_rtn['Province'].tolist() + us_rtn['State Name'].tolist()
+        # Choropleth value scale
+        bins_rtn = [x * step for x in range(10)]
 
         return (ca_rtn, us_rtn, bins_rtn, region_rtn)
 
 
 if __name__ == "__main__":
+    # Test Code
     a = CovidProcessor()
     data = a.get_data(datetime.datetime(2020, 12, 4))
     print(data[0].shape, data[1].shape, data[2], data[3])

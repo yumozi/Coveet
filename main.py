@@ -34,17 +34,5 @@ def parse_args():
 if __name__ == '__main__':
     args = parse_args()
 
-    print("Loading Tweets...")
-    prefilter_tweets = load_tweets('tweet_data/hydrated_tweets.json')
-    print(len(prefilter_tweets))
-
-    print("Processing Tweets...")
-    tweets = []
-    for tweet in prefilter_tweets:
-        if tweet.process_location():
-            tweet.tokenize_text()
-            tweet.analyze_sentiment()
-            tweets.append(tweet)
     print("Displaying map...")
-    #display_map(args.mode, tweets)
-    display_map("covid")
+    display_map(args.mode)
