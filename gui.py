@@ -22,7 +22,6 @@ from typing import Optional
 
 
 class ChoroplethMap(QtWidgets.QMainWindow):
-
     """A class representing a choropleth map.
 
     Representation Invariants:
@@ -71,7 +70,7 @@ class ChoroplethMap(QtWidgets.QMainWindow):
         self._selectable_regions = all_provinces
 
         # Initialize covid/sentiment data
-        if self.mode == "covid":
+        if self._mode == "covid":
             self._covid_data = CovidData()
             self._ca_data, self._us_data, self._bins = \
                 self._covid_data.get_data(self.parse_date_str(self._selectable_dates[0]))
@@ -93,7 +92,7 @@ class ChoroplethMap(QtWidgets.QMainWindow):
 
         # Define value display, with default values pre-calculated using default date and region
         self._value_display = QtWidgets.QLabel()
-        if mode == 'covid':
+        if self._mode == 'covid':
             self._value_display.setText('New COVID Cases: 0')
         else:
             self._value_display.setText('Avg. TWITTER Sentiment: -0.01649')
@@ -116,7 +115,7 @@ class ChoroplethMap(QtWidgets.QMainWindow):
         self._map = folium.Map(location=[40, -95], zoom_start=4, tiles="Stamen Terrain")
 
         # Choropleth configuration
-        if self.mode == 'covid':
+        if self._mode == 'covid':
             c1 = ["Province", "DailyTotals"]
             c2 = ["State Name", "7-day Avg Cases"]
         else:
@@ -176,7 +175,7 @@ class ChoroplethMap(QtWidgets.QMainWindow):
     def update_date(self, text: str) -> None:
         """Callback that updates the loaded data when a new date is selected
         """
-        if self.mode == 'covid':
+        if self._mode == 'covid':
             self._ca_data, self._us_data, self._bins = \
                 self._covid_data.get_data(self.parse_date_str(text))
         else:
@@ -192,7 +191,7 @@ class ChoroplethMap(QtWidgets.QMainWindow):
     def update_region(self, text: str) -> None:
         """Callback that updates the value display when a new region is selected
         """
-        if self.mode == 'covid':
+        if self._mode == 'covid':
             cases = 'NAN'
             if text in self._ca_data['Province'].values:
                 cases = self._ca_data.loc[self._ca_data['Province'] == text].values[0][1]
@@ -200,7 +199,7 @@ class ChoroplethMap(QtWidgets.QMainWindow):
                 cases = self._us_data.loc[self._us_data['State Name'] == text].values[0][1]
             self._value_display.setText("New COVID Cases: " + str(cases))
 
-        elif self.mode == 'sentiment':
+        else:
             sentiment = 'NAN'
             if text in self._ca_data['location'].values:
                 sentiment = self._ca_data.loc[self._ca_data['location'] == text].values[0][1]
