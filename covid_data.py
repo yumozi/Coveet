@@ -6,6 +6,10 @@ import pandas as pd
 class CovidData:
     """
     Class to process covid data
+
+    Instance Attributes:
+        - ca_data: a DataFrame containing the covid data for Canada
+        - us_data: a DataFrame containing the covid data for the US
     """
     ca_data = pd.DataFrame
     us_data = pd.DataFrame
