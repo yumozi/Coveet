@@ -6,7 +6,7 @@ import folium
 from PyQt5.QtCore import *
 from PyQt5 import QtWidgets, QtWebEngineWidgets
 
-from covid_processor import CovidData
+from covid_data import CovidData
 from tweet import get_tweets
 
 from country_provinces import all_provinces
