@@ -15,6 +15,8 @@ class CovidData:
     us_data = pd.DataFrame
 
     def __init__(self) -> None:
+        """Initializes a new CovidData object"""
+
         # Load Canada covid data
         self.ca_data = pd.read_csv("data/Provincial_Daily_Totals.csv")
 
@@ -54,9 +56,9 @@ class CovidData:
         self.us_data.loc[indices, '7-day Avg Cases'] = 0
 
     def get_data(self, date: datetime.datetime) -> tuple[pd.DataFrame, pd.DataFrame, list[float]]:
-        """
-        Returns daily cases for every province in Canada, daily cases for every state in US, and
-        the bin boundaries for the daily cases across Canada and US.
+
+        """Returns daily cases for every province in Canada, daily cases for every state in US, and
+        bin boundaries for the daily cases across Canada and US.
 
         Preconditions:
           - datetime.datetime(2020, 1, 22) <= date <= datetime.datetime(2021, 12, 11)

@@ -29,6 +29,8 @@ class Tweet:
         self._location = location
         self._country = ''
         self._score = 0.0
+        self.tokenize_text()
+        self.analyze_sentiment()
 
     def tokenize_text(self) -> None:
         """Tokenizes the text of the tweet"""
@@ -83,8 +85,6 @@ def get_tweets(date: datetime.datetime) -> tuple[pd.DataFrame, pd.DataFrame]:
     tweets = []
     for tweet in prefilter_tweets:
         if tweet.process_location():
-            tweet.tokenize_text()
-            tweet.analyze_sentiment()
             tweets.append(tweet)
     ca_data, us_data = create_dataframe(tweets)
 
