@@ -5,6 +5,7 @@ from nltk.sentiment import SentimentIntensityAnalyzer
 from statistics import mean
 import pandas as pd
 
+
 class Tweet:
     """A tweet and its related information
 
@@ -26,12 +27,14 @@ class Tweet:
         self._location = location
         self._country = ''
         self._score = 0.0
+        self.tokenize_text()
+        self.analyze_sentiment()
 
-    def tokenize_text(self):
+    def tokenize_text(self) -> None:
         """Tokenizes the text of the tweet"""
         self._tokenized_text = nltk.sent_tokenize(self._text)
 
-    def analyze_sentiment(self):
+    def analyze_sentiment(self) -> None:
         """Sets average sentiment of a tweet from its tokenized text"""
         sia = SentimentIntensityAnalyzer()
         scores = [sia.polarity_scores(s)["compound"] for s in self._tokenized_text]
@@ -49,21 +52,41 @@ class Tweet:
                 return True
         return False
 
-    def get_location(self):
+    def get_location(self) -> str:
         """Returns the location of the tweet"""
         return self._location
 
-    def get_score(self):
+    def get_score(self) -> float:
         """Returns the sentiment score of the tweet"""
         return self._score
 
-    def get_country(self):
+    def get_country(self) -> str:
         """Returns the country of the tweet"""
         return self._country
 
-    def __str__(self):
+    def __str__(self) -> str:
         """Returns the first 100 characters of the tweet"""
         return self._text[:100] + '...'
+
+
+def get_tweets(date: datetime.datetime) -> tuple[pd.DataFrame, pd.DataFrame]:
+    """
+    Returns the average tweet sentiment for every region and the maximum for all the regions, given a date
+    The resulting tuple holds the american data at index 0 and the canadian data at index 1.
+
+    Preconditions:
+      - date in self.possible_dates
+    """
+    path = "data\\" + date.strftime('%Y-%m-%d') + "\\hydrated_tweets.json"
+
+    prefilter_tweets = load_tweets(path)
+    tweets = []
+    for tweet in prefilter_tweets:
+        if tweet.process_location():
+            tweets.append(tweet)
+    ca_data, us_data = create_dataframe(tweets)
+
+    return ca_data, us_data
 
 
 def load_tweets(filename: str) -> list:
@@ -115,5 +138,3 @@ def create_dataframe(tweets: list) -> tuple[pd.DataFrame, pd.DataFrame]:
         us_dataframe['value'].append(us_scores[location])
 
     return pd.DataFrame.from_dict(canada_dataframe), pd.DataFrame.from_dict(us_dataframe)
-
-

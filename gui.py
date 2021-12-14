@@ -2,21 +2,56 @@ import io
 import sys
 import pandas as pd
 import folium
+import pandas as pd
 
 from tweet import create_dataframe, Tweet
 from PyQt5 import QtWidgets, QtWebEngineWidgets
 
 
+from covid_data import CovidData
+from tweet import get_tweets
+
+from country_provinces import all_provinces
+
+from typing import Optional
+
+
 class ChoroplethMap(QtWidgets.QMainWindow):
-    """A choropleth map"""
-    def __init__(self, mode: str, canada_data: pd.DataFrame, us_data: pd.DataFrame, bins: list):
+    """A class representing a choropleth map.
+
+    Representation Invariants:
+      - self.mode in {'covid','sentiment'}
+    """
+    _mode: str
+    _view: QtWebEngineWidgets.QWebEngineView
+    _selectable_dates: list[str]
+    _selectable_regions: list[str]
+    _covid_data: CovidData
+    _ca_data: pd.DataFrame
+    _us_data: pd.DataFrame
+    _bins: list[int]  # double check
+    _legend_name: str
+    _date_selector: QtWidgets.QComboBox
+    _region_selector: QtWidgets.QComboBox
+    _value_display: QtWidgets.QLabel
+    _map: Optional[folium.folium.Map] = None
+    _america_choropleth: Optional[folium.Choropleth] = None
+    _canada_choropleth: Optional[folium.Choropleth] = None
+
+    def __init__(self, mode: str):
+        """Initializes a ChoroplethMap object.
+        
+        Preconditions:
+          - mode in {'covid','sentiment'}
+        """
         super().__init__()
+        self._mode = mode
 
         # Window initialization
         self.setWindowTitle(self.tr("MAP PROJECT"))
         self.setFixedSize(1200, 1000)
 
-        # GUI initalization
+        # GUI initialization
         self._view = QtWebEngineWidgets.QWebEngineView()
         self._view.setContentsMargins(25, 25, 25, 25)
 
@@ -24,22 +59,52 @@ class ChoroplethMap(QtWidgets.QMainWindow):
         self.setCentralWidget(base_frame)
         h_layout = QtWidgets.QHBoxLayout(base_frame)
 
+        # Initialize selectable regions and dates
+        self._selectable_dates = ['2020-08-01', '2020-10-01', '2020-12-01',
+                                  '2021-02-01', '2021-04-01', '2021-06-01',
+                                  '2021-08-01', '2021-10-01', '2021-12-01']
+        self._selectable_regions = all_provinces
+
+        # Initialize covid/sentiment data
+        if self.mode == "covid":
+            self._covid_data = CovidData()
+            self._ca_data, self._us_data, self._bins = \
+                self._covid_data.get_data(self.parse_date_str(self._selectable_dates[0]))
+            self._legend_name = 'daily cases'
+        else:
+            # mode == 'sentiment'
+            self._ca_data, self._us_data = get_tweets(self.parse_date_str(self._selectable_dates[0]))
+            self._bins = [-1, -0.75, -0.5, -0.25, 0, 0.25, 0.5, 0.75, 1]
+            self._legend_name = 'sentiment score'
+
+        # Define date selector and region selector
+        self._date_selector = QtWidgets.QComboBox()
+        self._date_selector.addItems(self._selectable_dates)
+        self._date_selector.activated[str].connect(self.update_date)
+
+        self._region_selector = QtWidgets.QComboBox()
+        self._region_selector.addItems(self._selectable_regions)
+        self._region_selector.activated[str].connect(self.update_region)
+
+        # Define value display, with default values pre-calculated using default date and region
+        self._value_display = QtWidgets.QLabel()
+        if mode == 'covid':
+            self._value_display.setText('New COVID Cases: 0')
+        else:
+            self._value_display.setText('Avg. TWITTER Sentiment: -0.01649')
+
         adjust_frame = QtWidgets.QWidget()
         v_layout = QtWidgets.QVBoxLayout(adjust_frame)
 
         h_layout.addWidget(adjust_frame)
         h_layout.addWidget(self._view, stretch=1)
 
+        # Draw the map in the window
+        self.render_map()
+
+    def render_map(self) -> None:
+        """Renders a map with current data"""
         self._map = folium.Map(location=[40, -95], zoom_start=4, tiles="Stamen Terrain")
-
-        # Map initialization
-        self._canada_data = canada_data
-        self._us_data = us_data
-
-        if mode == "sentiment":
-            name = 'sentiment score'
-        else:
-            name = 'daily cases'
 
         # Choropleth configuration
         self._canada_choropleth = folium.Choropleth(
@@ -85,9 +150,57 @@ class ChoroplethMap(QtWidgets.QMainWindow):
         self._map.save(data, close_file=False)
         self._view.setHtml(data.getvalue().decode())
 
+    def update_date(self, text: str) -> None:
+        """Callback that updates the loaded data when a new date is selected
+        """
+        if self.mode == 'covid':
+            self._ca_data, self._us_data, self._bins = \
+                self._covid_data.get_data(self.parse_date_str(text))
+        else:
+            self._ca_data, self._us_data = get_tweets(
+                self.parse_date_str(text))
 
-def display_map(mode: str, tweets: list[Tweet]) -> None:
-    """Displays the interactive map"""
+        # Update list of available regions to choose from
+        self._region_selector.clear()
+        self._region_selector.addItems(self._selectable_regions)
+
+        self.render_map()
+
+    def update_region(self, text: str) -> None:
+        """Callback that updates the value display when a new region is selected
+        """
+        if self.mode == 'covid':
+            cases = 'NAN'
+            if text in self._ca_data['Province'].values:
+                cases = self._ca_data.loc[self._ca_data['Province'] == text].values[0][1]
+            elif text in self._us_data['State Name'].values:
+                cases = self._us_data.loc[self._us_data['State Name'] == text].values[0][1]
+            self._value_display.setText("New COVID Cases: " + str(cases))
+
+        elif self.mode == 'sentiment':
+            sentiment = 'NAN'
+            if text in self._ca_data['location'].values:
+                sentiment = self._ca_data.loc[self._ca_data['location'] == text].values[0][1]
+            elif text in self._us_data['location'].values:
+                sentiment = self._us_data.loc[self._us_data['location'] == text].values[0][1]
+
+            if sentiment == 'NAN':
+                self._value_display.setText("Avg. TWITTER Sentiment: NAN")
+            else:
+                self._value_display.setText(" Avg. TWITTER Sentiment: " + str(round(sentiment, 5)))
+
+    def parse_date_str(self, date_str: str) -> datetime.datetime:
+        """Returns a datetime.datetime object from a string in "Year-Month-Date" format"""
+        year, month, day = date_str.split("-")
+        return datetime.datetime(int(year), int(month), int(day))
+
+
+def display_map(mode: str) -> None:
+    """Displays the interactive map
+
+    Precondition:
+       - mode in {'covid', 'sentiment'}
+    """
 
     app = QtWidgets.QApplication(sys.argv)
 
@@ -111,3 +224,21 @@ def display_map(mode: str, tweets: list[Tweet]) -> None:
         window.show()
 
     sys.exit(app.exec_())
+
+
+if __name__ == "__main__":
+    display_map('')
+
+    # import python_ta
+    # import python_ta.contracts
+    # python_ta.contracts.DEBUG_CONTRACTS = True
+    # python_ta.contracts.check_all_contracts()
+    # import doctest
+    # doctest.testmod(verbose=True)
+    # python_ta.check_all(config={
+    #     # the names (strs) of imported modules
+    #     'extra-imports': ['python_ta.contracts', 'datetime', 'io', 'sys', 'folium', 'covid_processor'],
+    #     'allowed-io': [],  # the names (strs) of functions that call print/open/input
+    #     'max-line-length': 100,
+    #     'disable': ['R1705', 'C0200']
+    # })
