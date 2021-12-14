@@ -6,7 +6,7 @@ import pandas as pd
 
 Copyright and Usage Information
 ===============================
-This file is Copyright (c) 2021 Eric Xue and Jeremy Liu.
+This file is Copyright (c) 2021 Eric Xue and Jeremy Xie.
 """
 class CovidData:
     """

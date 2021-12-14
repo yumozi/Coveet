@@ -2,7 +2,7 @@
 
 Copyright and Usage Information
 ===============================
-This file is Copyright (c) 2021 Eric Xue and Jeremy Liu.
+This file is Copyright (c) 2021 Eric Xue and Jeremy Xie.
 """
 country_provinces = {'Canada': ['alberta', 'british columbia', 'manitoba',
                                 'new brunswick', 'newfoundland and labrador',
