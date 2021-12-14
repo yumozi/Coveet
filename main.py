@@ -36,6 +36,7 @@ if __name__ == '__main__':
 
     print("Loading Tweets...")
     prefilter_tweets = load_tweets('tweet_data/hydrated_tweets.json')
+    print(len(prefilter_tweets))
 
     print("Processing Tweets...")
     tweets = []
@@ -44,6 +45,6 @@ if __name__ == '__main__':
             tweet.tokenize_text()
             tweet.analyze_sentiment()
             tweets.append(tweet)
-
     print("Displaying map...")
-    display_map(args.mode, tweets)
+    #display_map(args.mode, tweets)
+    display_map("covid")

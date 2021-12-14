@@ -31,21 +31,22 @@ class ChoroplethMap(QtWidgets.QMainWindow):
         h_layout = QtWidgets.QHBoxLayout(base_frame)
 
         # Selectable date range within acceptable boundaries of the datasets
-        self._selectable_dates = ['2020-04-01', '2020-06-01',
-                                  '2020-08-01', '2020-10-01', '2020-12-01',
+        self._selectable_dates = ['2020-08-01', '2020-10-01', '2020-12-01',
                                   '2021-02-01', '2021-04-01', '2021-06-01',
                                   '2021-08-01', '2021-10-01', '2021-12-01']
         if self.mode == "covid":
-            self.covid_processor = CovidProcessor()
+            self._covid_processor = CovidProcessor()
 
-            # Initialize with covid_data from the first date
+            # Initialize with tweet_data from the first date
             self._canadian_data, self._american_data, self._bins, self._selectable_regions = \
-                self.covid_processor.get_data(self.deparse_date(self._selectable_dates[0]))
+                self._covid_processor.get_data(self.deparse_date(self._selectable_dates[0]))
             self._legend_name = 'daily cases'
         else:
-            self.tweet_processor = TweetProcessor()
+            self._tweet_processor = TweetProcessor()
+
+            # Initialize with tweet data from the first date
             self._canadian_data, self._american_data, self._bins, self._selectable_regions = \
-                self.tweet_processor.get_data(self.deparse_date(self._selectable_dates[0]))
+                self._tweet_processor.get_data(self.deparse_date(self._selectable_dates[0]))
             self._legend_name = 'sentiment score'
 
         # More Data Elements
@@ -83,11 +84,11 @@ class ChoroplethMap(QtWidgets.QMainWindow):
     def combo_changed(self, text: str) -> None:
         """Callback that updates the map when a new selection is made to the combo box"""
         if self.mode == 'covid':
-            self._canadian_data, self._american_covid_data, self._bins, self._selectable_regions = \
-                self.covid_processor.get_data(self.deparse_date(text))
+            self._canadian_data, self._american_data, self._bins, self._selectable_regions = \
+                self._covid_processor.get_data(self.deparse_date(text))
         else:
-            self._canadian_data, self._american_tweet_data, self._bins, self._selectable_regions = \
-                self.tweet_processor.get_data(self.deparse_date(text))
+            self._canadian_data, self._american_data, self._bins, self._selectable_regions = \
+                self._tweet_processor.get_data(self.deparse_date(text))
 
         # Update list of available regions to choose from
         self._combo2.clear()
@@ -115,7 +116,7 @@ class ChoroplethMap(QtWidgets.QMainWindow):
             self._property_label.setText(" Avg. TWITTER Sentiment: " + str(sentiment))
 
     def render_map(self) -> None:
-        """Updates the map with the current covid_data"""
+        """Updates the map with the current data"""
         self._map = folium.Map(location=[40, -95], zoom_start=4, tiles="Stamen Terrain")
 
         # Choropleth configuration
@@ -127,7 +128,7 @@ class ChoroplethMap(QtWidgets.QMainWindow):
             c2 = ["location", "value"]
 
         self._canada_choropleth = folium.Choropleth(
-            geo_data="covid_data/canada_provinces.geojson",
+            geo_data="data/canada_provinces.geojson",
             name="Canada",
             data=self._canadian_data,
             columns=c1,
@@ -142,7 +143,7 @@ class ChoroplethMap(QtWidgets.QMainWindow):
         self._canada_choropleth.add_to(self._map)
 
         self._america_choropleth = folium.Choropleth(
-            geo_data="covid_data/us_states.json",
+            geo_data="data/us_states.json",
             name="America",
             data=self._american_data,
             columns=c2,
@@ -203,7 +204,7 @@ def display_map(mode: str) -> None:
 
 if __name__ == "__main__":
     #display_map('covid')
-    display_map('sentiment')
+    display_map('')
 
     # import python_ta
     # import python_ta.contracts

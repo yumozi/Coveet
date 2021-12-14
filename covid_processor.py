@@ -11,7 +11,7 @@ class CovidProcessor():
     """
 
     def __init__(self):
-        self.ca_data = pd.read_csv("covid_data/Provincial_Daily_Totals.csv")
+        self.ca_data = pd.read_csv("data/Provincial_Daily_Totals.csv")
 
         # Cleaning up and removing unnecessary info:
         self.ca_data["Province"].replace({'ALBERTA': 'Alberta', 'NWT': 'Northwest Territories', 'YUKON': 'Yukon',
@@ -36,7 +36,7 @@ class CovidProcessor():
         num[num < 0] = 0
 
         # Continuing on to US covid_data
-        self.us_data = pd.read_csv("covid_data/State_Daily_Totals.csv")
+        self.us_data = pd.read_csv("data/State_Daily_Totals.csv")
 
         # Negative covid_data is inadmissable for our uses
         num = self.us_data._get_numeric_data()

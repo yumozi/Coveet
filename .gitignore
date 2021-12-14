@@ -1,5 +1,4 @@
-covid_data/
+data/
 .idea/
 __pycache__/
 *.pyc
-tweet_data/
