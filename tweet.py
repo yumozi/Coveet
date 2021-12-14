@@ -4,6 +4,7 @@ import nltk
 from nltk.sentiment import SentimentIntensityAnalyzer
 from statistics import mean
 import pandas as pd
+import datetime
 
 
 class Tweet:
@@ -21,7 +22,7 @@ class Tweet:
     _country: str
     _score: float
 
-    def __init__(self, text, location):
+    def __init__(self, text, location) -> None:
         self._text = text
         self._tokenized_text = []
         self._location = location

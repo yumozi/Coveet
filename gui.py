@@ -1,11 +1,16 @@
+import datetime
 import io
 import sys
-import pandas as pd
 import folium
 import pandas as pd
 
-from tweet import create_dataframe, Tweet
+from PyQt5.QtCore import *
 from PyQt5 import QtWidgets, QtWebEngineWidgets
+
+from covid_processor import CovidData
+from tweet import get_tweets
+
+from country_provinces import all_provinces
 
 
 from covid_data import CovidData
@@ -17,6 +22,7 @@ from typing import Optional
 
 
 class ChoroplethMap(QtWidgets.QMainWindow):
+
     """A class representing a choropleth map.
 
     Representation Invariants:
@@ -48,13 +54,12 @@ class ChoroplethMap(QtWidgets.QMainWindow):
         self._mode = mode
 
         # Window initialization
-        self.setWindowTitle(self.tr("MAP PROJECT"))
-        self.setFixedSize(1200, 1000)
+        self.setWindowTitle(self.tr("COVEET TRACKER"))
+        self.setFixedSize(900, 900)
 
         # GUI initialization
         self._view = QtWebEngineWidgets.QWebEngineView()
         self._view.setContentsMargins(25, 25, 25, 25)
-
         base_frame = QtWidgets.QWidget()
         self.setCentralWidget(base_frame)
         h_layout = QtWidgets.QHBoxLayout(base_frame)
@@ -69,6 +74,7 @@ class ChoroplethMap(QtWidgets.QMainWindow):
         if self.mode == "covid":
             self._covid_data = CovidData()
             self._ca_data, self._us_data, self._bins = \
+
                 self._covid_data.get_data(self.parse_date_str(self._selectable_dates[0]))
             self._legend_name = 'daily cases'
         else:
@@ -96,6 +102,10 @@ class ChoroplethMap(QtWidgets.QMainWindow):
         adjust_frame = QtWidgets.QWidget()
         v_layout = QtWidgets.QVBoxLayout(adjust_frame)
 
+        v_layout.addWidget(self._date_selector)
+        v_layout.addWidget(self._region_selector)
+        v_layout.addWidget(self._value_display)
+        v_layout.setAlignment(Qt.AlignTop)
         h_layout.addWidget(adjust_frame)
         h_layout.addWidget(self._view, stretch=1)
 
@@ -107,42 +117,56 @@ class ChoroplethMap(QtWidgets.QMainWindow):
         self._map = folium.Map(location=[40, -95], zoom_start=4, tiles="Stamen Terrain")
 
         # Choropleth configuration
+        if self.mode == 'covid':
+            c1 = ["Province", "DailyTotals"]
+            c2 = ["State Name", "7-day Avg Cases"]
+        else:
+            c1 = ["location", "value"]
+            c2 = ["location", "value"]
+
         self._canada_choropleth = folium.Choropleth(
             geo_data="data/canada_provinces.geojson",
             name="Canada",
-            data=self._canada_data,
-            columns=["location", "value"],
+            data=self._ca_data,
+            columns=c1,
             key_on="feature.properties.name",
-            fill_color="YlGn",
+            fill_color="YlOrRd",
             fill_opacity=0.7,
             line_opacity=.1,
-            legend_name=name,
+            _legend_name=self._legend_name,
             highlight=True,
-            bins=bins
+            bins=self._bins
         )
         self._canada_choropleth.add_to(self._map)
 
-        self._us_choropleth = folium.Choropleth(
+        self._america_choropleth = folium.Choropleth(
             geo_data="data/us_states.json",
             name="America",
             data=self._us_data,
-            columns=["location", "value"],
+            columns=c2,
             key_on="feature.id",
-            fill_color="YlGn",
+            fill_color="YlOrRd",
             fill_opacity=0.7,
             line_opacity=.1,
-            legend_name="America",
+            _legend_name="America",
             highlight=True,
-            bins=bins
+            bins=self._bins
         )
-        self._us_choropleth.add_to(self._map)
+        self._america_choropleth.add_to(self._map)
 
         # An issue under foilum's GitHub page highlighted that
-        # this is the only way to display one legend with two
-        # choropleth maps.
-        for key in self._us_choropleth._children:
+        # this is the only way to hide a legend for now
+        for key in self._america_choropleth._children:
             if key.startswith('color_map'):
-                del(self._us_choropleth._children[key])
+                del (self._america_choropleth._children[key])
+
+        self._canada_choropleth.geojson.add_child(
+            folium.features.GeoJsonTooltip(['name'], labels=False)
+        )
+
+        self._america_choropleth.geojson.add_child(
+            folium.features.GeoJsonTooltip(['name'], labels=False)
+        )
 
         folium.LayerControl().add_to(self._map)  # add layer control and toggling to the map
 
@@ -204,15 +228,8 @@ def display_map(mode: str) -> None:
 
     app = QtWidgets.QApplication(sys.argv)
 
-    if mode == "sentiment":
-        canada_data, us_data = create_dataframe(tweets)
-        window = ChoroplethMap(mode, canada_data, us_data, bins=[-1, -0.5, 0, 0.5, 1])
-        window.show()
-    elif mode == 'covid':
-        window = ChoroplethMap(mode,
-                               canada_data=pd.read_csv("data/canada_covid.csv"),
-                               us_data=pd.read_csv("data/us_covid.csv"),
-                               bins=[0, 300, 600, 900, 1200, 1500, 1800, 2100, 2400, 2700])
+    if mode == "sentiment" or mode == "covid":
+        window = ChoroplethMap(mode)
         window.show()
     else:
         window = QtWidgets.QMainWindow()

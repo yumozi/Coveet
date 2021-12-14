@@ -1,13 +1,12 @@
 """
 The main program for the analyzer.
 """
-from tweet import load_tweets
 import argparse
 from gui import display_map
 
 
 # ————————————————————————————————— Argparse —————————————————————————————————
-def parse_args():
+def parse_args() -> argparse.Namespace:
     """Parse the command line arguments.
     """
     parser = argparse.ArgumentParser(description="Argparse for Interactive Map")
@@ -34,16 +33,5 @@ def parse_args():
 if __name__ == '__main__':
     args = parse_args()
 
-    print("Loading Tweets...")
-    prefilter_tweets = load_tweets('data/hydrated_tweets.json')
-
-    print("Processing Tweets...")
-    tweets = []
-    for tweet in prefilter_tweets:
-        if tweet.process_location():
-            tweet.tokenize_text()
-            tweet.analyze_sentiment()
-            tweets.append(tweet)
-
     print("Displaying map...")
-    display_map(args.mode, tweets)
+    display_map(args.mode)
