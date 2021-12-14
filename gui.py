@@ -74,7 +74,6 @@ class ChoroplethMap(QtWidgets.QMainWindow):
         if self.mode == "covid":
             self._covid_data = CovidData()
             self._ca_data, self._us_data, self._bins = \
-
                 self._covid_data.get_data(self.parse_date_str(self._selectable_dates[0]))
             self._legend_name = 'daily cases'
         else:
